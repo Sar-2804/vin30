@@ -1,98 +1,98 @@
 import streamlit as st
-import random
-import time
+import pandas as pd
+from datetime import date
+
+st.set_page_config(page_title="School Attendance", layout="centered")
+
+st.title("📘 School Attendance System")
 
 # Initialize session state
-if "ball_x" not in st.session_state:
-    st.session_state.ball_x = 300
-    st.session_state.ball_y = 350
-    st.session_state.ball_radius = 20
-    st.session_state.obstacles = []
-    st.session_state.score = 0
-    st.session_state.game_over = False
-    st.session_state.frame_count = 0
+if "students" not in st.session_state:
+    st.session_state.students = []
 
-WIDTH, HEIGHT = 600, 400
-ball_speed = 15
-obstacle_width = 50
-obstacle_height = 20
-obstacle_speed = 10
-spawn_rate = 10
+if "attendance" not in st.session_state:
+    st.session_state.attendance = pd.DataFrame(
+        columns=["Date", "Student Name", "Status"]
+    )
 
-st.title("🎮 Ball Avoidance Game (Streamlit)")
+# ---------------------------
+# Add Students Section
+# ---------------------------
+st.header("➕ Add Students")
 
-# Controls
-col1, col2, col3 = st.columns(3)
-with col1:
-    if st.button("⬅️ Left"):
-        st.session_state.ball_x -= ball_speed
-with col2:
-    if st.button("➡️ Right"):
-        st.session_state.ball_x += ball_speed
-with col3:
-    if st.button("🔄 Restart"):
-        st.session_state.ball_x = 300
-        st.session_state.ball_y = 350
-        st.session_state.obstacles = []
-        st.session_state.score = 0
-        st.session_state.game_over = False
-        st.session_state.frame_count = 0
+new_student = st.text_input("Enter student name")
 
-# Game logic
-if not st.session_state.game_over:
-    st.session_state.frame_count += 1
+if st.button("Add Student"):
+    if new_student:
+        if new_student not in st.session_state.students:
+            st.session_state.students.append(new_student)
+            st.success(f"{new_student} added!")
+        else:
+            st.warning("Student already exists")
+    else:
+        st.error("Please enter a name")
 
-    # Spawn obstacles
-    if st.session_state.frame_count % spawn_rate == 0:
-        obs_x = random.randint(0, WIDTH - obstacle_width)
-        st.session_state.obstacles.append([obs_x, 0])
+# Show student list
+if st.session_state.students:
+    st.write("### 👨‍🎓 Student List")
+    st.write(st.session_state.students)
 
-    # Move obstacles
-    new_obstacles = []
-    for obs in st.session_state.obstacles:
-        obs[1] += obstacle_speed
-        if obs[1] < HEIGHT:
-            new_obstacles.append(obs)
-    st.session_state.obstacles = new_obstacles
+# ---------------------------
+# Mark Attendance Section
+# ---------------------------
+st.header("📝 Mark Attendance")
 
-    # Collision detection
-    for obs in st.session_state.obstacles:
-        if (
-            st.session_state.ball_x + st.session_state.ball_radius > obs[0]
-            and st.session_state.ball_x - st.session_state.ball_radius < obs[0] + obstacle_width
-            and st.session_state.ball_y + st.session_state.ball_radius > obs[1]
-            and st.session_state.ball_y - st.session_state.ball_radius < obs[1] + obstacle_height
-        ):
-            st.session_state.game_over = True
+selected_date = st.date_input("Select Date", date.today())
 
-    st.session_state.score += 1
+if st.session_state.students:
+    attendance_data = []
 
-# Draw (simple text-based visualization)
-st.write(f"**Score:** {st.session_state.score}")
+    for student in st.session_state.students:
+        status = st.radio(
+            f"{student}",
+            ("Present", "Absent"),
+            key=f"{student}_{selected_date}"
+        )
+        attendance_data.append([selected_date, student, status])
 
-canvas = [[" " for _ in range(30)] for _ in range(20)]
+    if st.button("Submit Attendance"):
+        df = pd.DataFrame(
+            attendance_data,
+            columns=["Date", "Student Name", "Status"]
+        )
+        st.session_state.attendance = pd.concat(
+            [st.session_state.attendance, df],
+            ignore_index=True
+        )
+        st.success("Attendance recorded!")
 
-# Draw ball
-bx = int(st.session_state.ball_x / 20)
-by = int(st.session_state.ball_y / 20)
-if 0 <= by < 20 and 0 <= bx < 30:
-    canvas[by][bx] = "O"
+# ---------------------------
+# View Attendance Records
+# ---------------------------
+st.header("📊 Attendance Records")
 
-# Draw obstacles
-for obs in st.session_state.obstacles:
-    ox = int(obs[0] / 20)
-    oy = int(obs[1] / 20)
-    if 0 <= oy < 20 and 0 <= ox < 30:
-        canvas[oy][ox] = "X"
+if not st.session_state.attendance.empty:
+    st.dataframe(st.session_state.attendance)
 
-# Render grid
-for row in canvas:
-    st.text("".join(row))
+    # Download option
+    csv = st.session_state.attendance.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        label="⬇️ Download Attendance CSV",
+        data=csv,
+        file_name="attendance.csv",
+        mime="text/csv"
+    )
+else:
+    st.info("No attendance records yet.")
 
-# Game over
-if st.session_state.game_over:
-    st.error("💀 GAME OVER")
+# ---------------------------
+# Clear Data
+# ---------------------------
+st.header("⚠️ Reset")
 
-# Auto refresh
-time.sleep(0.1)
-st.rerun()
+if st.button("Clear All Data"):
+    st.session_state.students = []
+    st.session_state.attendance = pd.DataFrame(
+        columns=["Date", "Student Name", "Status"]
+    )
+    st.success("All data cleared!")
