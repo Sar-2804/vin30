@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # Replace with your OpenWeatherMap API key
-API_KEY = "API_KEY = "a1b2c3d4e5f6g7h8i9j0""
+API_KEY = "a1b2c3d4e5f6g7h8i9j0"
 
 st.set_page_config(page_title="Live Weather", page_icon="🌤️")
 
