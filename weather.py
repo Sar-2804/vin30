@@ -33,7 +33,7 @@ if st.button("Get Live Weather"):
             with col1:
                 st.metric("🌡 Temperature", f"{data['main']['temp']} °C")
                 st.metric("💧 Humidity", f"{data['main']['humidity']}%")
-                st.metric("🌬 Wind", f"{data['wind']['speed']} km/h")
+                st.metric("🌬 Wind", f"{round(data['wind']['speed'] * 3.6, 1)} km/h")
 
             with col2:
                 st.metric("🤗 Feels Like", f"{data['main']['feels_like']} °C")
