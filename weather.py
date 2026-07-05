@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # Replace with your OpenWeatherMap API key
-API_KEY = "a1b2c3d4e5f6g7h8i9j0"
+API_KEY = "1cbde7b994ef3310b827b3c40fe1f789"
 
 st.set_page_config(page_title="Live Weather", page_icon="🌤️")
 
@@ -44,4 +44,4 @@ if st.button("Get Live Weather"):
             st.info(data["weather"][0]["description"].title())
 
         else:
-            st.error("City not found or API key is invalid.")
+            st.error(response.json())
